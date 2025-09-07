@@ -2,6 +2,9 @@ import streamlit as st
 from subtitler import generate_subtitles, translate_subtitles, burn_subtitles
 import os
 
+# Yuklanadigan fayl hajmini oshirish (masalan, 1 GB = 1024 * 1024 * 1024 bayt)
+st.set_option('server.maxUploadSize', 1024 * 1024 * 1024)  # 1 GB
+
 st.set_page_config(page_title="AI Subtitl Platforma", page_icon="🎬", layout="centered")
 st.markdown(
     """
@@ -48,11 +51,18 @@ with tab1:
                 f.write(uploaded_video.read())
         # st.video("input_video.mp4")  # Video avtomatik ijro qilinmaydi
         if st.button("Subtitl yaratish", use_container_width=True):
-            progress = st.progress(0, text="Jarayon boshlandi...")
+            progress_placeholder = st.empty()
+            status_placeholder = st.empty()
             def progress_callback(p):
-                progress.progress(p, text=f"Subtitl yaratilmoqda... {p}%")
+                progress_placeholder.progress(p, text=f"Subtitl yaratilmoqda...")
+                status_placeholder.markdown(
+                    f"<div style='text-align:center;font-size:18px;color:#2563eb;'>"
+                    f"<b>Jarayon:</b> {p}%</div>", unsafe_allow_html=True)
             srt_path = generate_subtitles("input_video.mp4", progress_callback)
-            progress.progress(100, text="Subtitl yaratildi!")
+            progress_placeholder.progress(100, text="Subtitl yaratildi!")
+            status_placeholder.markdown(
+                "<div style='text-align:center;font-size:18px;color:#059669;'><b>Subtitl yaratildi! 100%</b></div>",
+                unsafe_allow_html=True)
             if srt_path:
                 st.success("✅ Subtitl yaratildi!")
                 with open(srt_path, "r", encoding="utf-8") as f:
@@ -78,11 +88,18 @@ with tab2:
 
     if srt_path:
         if st.button("Tarjima qilish", key="translate_btn", use_container_width=True):
-            progress = st.progress(0, text="Tarjima boshlandi...")
+            progress_placeholder = st.empty()
+            status_placeholder = st.empty()
             def progress_callback(p):
-                progress.progress(p, text=f"Tarjima qilinmoqda... {p}%")
+                progress_placeholder.progress(p, text=f"Tarjima qilinmoqda...")
+                status_placeholder.markdown(
+                    f"<div style='text-align:center;font-size:18px;color:#2563eb;'>"
+                    f"<b>Jarayon:</b> {p}%</div>", unsafe_allow_html=True)
             translated_path = translate_subtitles(srt_path, lang, progress_callback)
-            progress.progress(100, text="Tarjima tayyor!")
+            progress_placeholder.progress(100, text="Tarjima tayyor!")
+            status_placeholder.markdown(
+                "<div style='text-align:center;font-size:18px;color:#059669;'><b>Tarjima tayyor! 100%</b></div>",
+                unsafe_allow_html=True)
             if translated_path:
                 with open(translated_path, "r", encoding="utf-8") as f:
                     st.download_button("Tarjima qilingan subtitl (.srt)", f, file_name=f"subtitle_{lang}.srt", use_container_width=True)
@@ -254,3 +271,11 @@ st.markdown("<p style='text-align:center; color:#94a3b8;'>© 2024 Zamonaviy Subt
 #    ffmpeg-python
 
 # 4. Streamlit Cloud’da deploy qiling.
+
+# "Your app is in the oven" yozuvi Streamlit Cloud (yoki Streamlit) dastur yuklanayotganda chiqadi.
+# Bu normal holat – dastur yuklanishi va ishga tushishi uchun biroz vaqt ketadi.
+# Dastur yuklanib bo‘lgach, interfeys ochiladi va foydalanishingiz mumkin bo‘ladi.
+# Agar bu yozuv uzoq vaqt turib qolsa:
+# 1. Internet tezligini tekshiring.
+# 2. Fayllarda xatolik yo‘qligini va requirements.txt to‘g‘ri ekanini tekshiring.
+# 3. Dastur loglarida (Streamlit Cloud sahifasida) xatolik bo‘lsa, shu chatga yuboring – yordam beraman.
