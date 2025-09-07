@@ -2,8 +2,18 @@ import streamlit as st
 from subtitler import generate_subtitles, translate_subtitles, burn_subtitles
 import os
 
-# Yuklanadigan fayl hajmini oshirish (masalan, 1 GB = 1024 * 1024 * 1024 bayt)
-st.set_option('server.maxUploadSize', 1024 * 1024 * 1024)  # 1 GB
+# Streamlit Cloud yoki yangi versiyalarda fayl hajmini oshirish uchun
+# st.set_option('server.maxUploadSize', ...) ishlamaydi va xatolik beradi.
+# To‘g‘ri usul: .streamlit/config.toml faylida quyidagilarni yozing:
+
+# [server]
+# maxUploadSize = 1024
+
+# Agar lokal ishlatsangiz, yuqoridagi faylni loyihangiz ichida yarating.
+# Streamlit Cloud-da esa, repozitoriyga .streamlit/config.toml faylini qo‘shing.
+
+# Quyidagi qatorni olib tashlang yoki izohga oling:
+# st.set_option('server.maxUploadSize', 1024 * 1024 * 1024)  # 1 GB
 
 st.set_page_config(page_title="AI Subtitl Platforma", page_icon="🎬", layout="centered")
 st.markdown(
