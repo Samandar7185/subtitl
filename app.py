@@ -2,20 +2,7 @@ import streamlit as st
 from subtitler import generate_subtitles, translate_subtitles, burn_subtitles
 import os
 
-# Streamlit Cloud yoki yangi versiyalarda fayl hajmini oshirish uchun
-# st.set_option('server.maxUploadSize', ...) ishlamaydi va xatolik beradi.
-# To‘g‘ri usul: .streamlit/config.toml faylida quyidagilarni yozing:
-
-# [server]
-# maxUploadSize = 1024
-
-# Agar lokal ishlatsangiz, yuqoridagi faylni loyihangiz ichida yarating.
-# Streamlit Cloud-da esa, repozitoriyga .streamlit/config.toml faylini qo‘shing.
-
-# Quyidagi qatorni olib tashlang yoki izohga oling:
-# st.set_option('server.maxUploadSize', 1024 * 1024 * 1024)  # 1 GB
-
-st.set_page_config(page_title="AI Subtitl Platforma", page_icon="🎬", layout="centered")
+st.set_page_config(page_title="O‘zbekcha Subtitl Tarjimon", page_icon="🎬", layout="centered")
 st.markdown(
     """
     <style>
@@ -27,8 +14,8 @@ st.markdown(
     </style>
     """, unsafe_allow_html=True
 )
-st.markdown("<h1 style='text-align:center; color:#2563eb;'>🎬 Zamonaviy Subtitl Platformasi</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align:center; color:#64748b;'>Video uchun avtomatik subtitl, tarjima va tahrirlash!</p>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align:center; color:#2563eb;'>🎬 O‘zbekcha Subtitl Tarjimon</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#64748b;'>Video uchun avtomatik subtitl, tarjima va tahrirlash platformasi!</p>", unsafe_allow_html=True)
 
 SUPPORTED_LANGS = {
     "Inglizcha": "en",
@@ -183,7 +170,7 @@ with tab4:
         st.info("Video va subtitl faylini yuklang.")
 
 st.markdown("---")
-st.markdown("<p style='text-align:center; color:#94a3b8;'>© 2024 Zamonaviy Subtitl Platforma | <a href='https://github.com/' target='_blank'>GitHub</a></p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center; color:#94a3b8;'>© 2024 O‘zbekcha Subtitl Tarjimon | <a href='https://github.com/' target='_blank'>GitHub</a></p>", unsafe_allow_html=True)
 
 # Ishga tushurish bo'yicha ko'rsatma:
 # 1. Terminal yoki Anaconda Prompt-ni oching.
@@ -276,6 +263,19 @@ st.markdown("<p style='text-align:center; color:#94a3b8;'>© 2024 Zamonaviy Subt
 # 3. requirements.txt faylida quyidagilar bo‘lishi kerak:
 #    streamlit
 #    openai-whisper
+#    deep-translator
+#    moviepy
+#    ffmpeg-python
+
+# 4. Streamlit Cloud’da deploy qiling.
+
+# "Your app is in the oven" yozuvi Streamlit Cloud (yoki Streamlit) dastur yuklanayotganda chiqadi.
+# Bu normal holat – dastur yuklanishi va ishga tushishi uchun biroz vaqt ketadi.
+# Dastur yuklanib bo‘lgach, interfeys ochiladi va foydalanishingiz mumkin bo‘ladi.
+# Agar bu yozuv uzoq vaqt turib qolsa:
+# 1. Internet tezligini tekshiring.
+# 2. Fayllarda xatolik yo‘qligini va requirements.txt to‘g‘ri ekanini tekshiring.
+# 3. Dastur loglarida (Streamlit Cloud sahifasida) xatolik bo‘lsa, shu chatga yuboring – yordam beraman.
 #    deep-translator
 #    moviepy
 #    ffmpeg-python
