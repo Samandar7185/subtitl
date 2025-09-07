@@ -5,29 +5,23 @@ import whisper
 from deep_translator import GoogleTranslator
 import shutil
 
-FFMPEG_PATH = r"C:\Users\Samxoji\Downloads\Compressed\ffmpeg-8.0-full_build-shared\bin\ffmpeg.exe"  # yangi to‘liq yo‘l
+FFMPEG_PATH = "ffmpeg"  # faqat nomi, to‘liq yo‘l emas
 
 def check_ffmpeg():
-    # Diagnostika uchun: mavjudligini va yo‘lni ko‘rsatish
-    if not os.path.isfile(FFMPEG_PATH):
+    if shutil.which(FFMPEG_PATH) is None:
         raise FileNotFoundError(
-            f"ffmpeg topilmadi!\n"
-            f"Tekshirilgan yo‘l: {FFMPEG_PATH}\n"
-            f"Fayl haqiqatan ham shu joyda mavjudligini File Explorer orqali tekshiring.\n"
-            f"Agar boshqa joyda bo‘lsa, FFMPEG_PATH ni to‘g‘ri yo‘l bilan almashtiring."
+            "ffmpeg topilmadi! Onlayn serverlarda ffmpeg avtomatik o‘rnatilgan bo‘ladi. "
+            "Agar lokal ishlatsangiz, ffmpeg ni PATH ga qo‘shing yoki serverda administratorga murojaat qiling."
         )
     return True
 
 def set_ffmpeg_in_path():
-    # Whisper uchun ffmpeg yo‘lini PATH ga vaqtincha qo‘shish
-    ffmpeg_dir = os.path.dirname(FFMPEG_PATH)
-    os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+    # Onlayn serverlarda kerak emas, lekin lokal uchun qoldirilgan
+    pass
 
 def generate_subtitles(video_path, progress_callback=None):
     if not check_ffmpeg():
-        raise FileNotFoundError(
-            f"ffmpeg topilmadi! {FFMPEG_PATH} fayli mavjudligiga ishonch hosil qiling."
-        )
+        raise FileNotFoundError("ffmpeg topilmadi!")
     set_ffmpeg_in_path()
     audio_path = tempfile.mktemp(suffix=".wav")
     if progress_callback:
@@ -44,17 +38,17 @@ def generate_subtitles(video_path, progress_callback=None):
     segments = result["segments"]
     srt_path = tempfile.mktemp(suffix=".srt")
     total = len(segments)
-    for i, seg in enumerate(segments):
-        start = seg["start"]
-        end = seg["end"]
-        text = seg["text"].strip()
-        f.write(f"{i+1}\n")
-        f.write(f"{format_time(start)} --> {format_time(end)}\n")
-        f.write(f"{text}\n\n")
-        if progress_callback:
-            # Progress: 20% (audio) + 75% (transcribe) proportional
-            p = 20 + int(75 * (i + 1) / total)
-            progress_callback(p)
+    with open(srt_path, "w", encoding="utf-8") as f:
+        for i, seg in enumerate(segments):
+            start = seg["start"]
+            end = seg["end"]
+            text = seg["text"].strip()
+            f.write(f"{i+1}\n")
+            f.write(f"{format_time(start)} --> {format_time(end)}\n")
+            f.write(f"{text}\n\n")
+            if progress_callback:
+                p = 20 + int(75 * (i + 1) / total)
+                progress_callback(p)
     os.remove(audio_path)
     if progress_callback:
         progress_callback(100)
@@ -83,15 +77,15 @@ def translate_subtitles(srt_path, dest_lang, progress_callback=None):
     if len(block) == 3:
         blocks.append(block.copy())
     total = len(blocks)
-    for i, block in enumerate(blocks):
-        fout.write(block[0])
-        fout.write(block[1])
-        translated = GoogleTranslator(source='auto', target=dest_lang).translate(block[2])
-        fout.write(translated + "\n\n")
-        if progress_callback:
-            # Progress: 0-100% for translation
-            p = int(100 * (i + 1) / total)
-            progress_callback(p)
+    with open(out_path, "w", encoding="utf-8") as fout:
+        for i, block in enumerate(blocks):
+            fout.write(block[0])
+            fout.write(block[1])
+            translated = GoogleTranslator(source='auto', target=dest_lang).translate(block[2])
+            fout.write(translated + "\n\n")
+            if progress_callback:
+                p = int(100 * (i + 1) / total)
+                progress_callback(p)
     if progress_callback:
         progress_callback(100)
     return out_path
@@ -100,6 +94,12 @@ def burn_subtitles(video_path, srt_path):
     out_path = tempfile.mktemp(suffix=".mp4")
     cmd = [
         FFMPEG_PATH, "-y", "-i", video_path, "-vf", f"subtitles={srt_path}", "-c:a", "copy", out_path
+    ]
+    try:
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return out_path
+    except Exception:
+        return None
     ]
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
