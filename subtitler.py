@@ -28,8 +28,7 @@ def generate_subtitles(video_path, progress_callback=None):
         raise FileNotFoundError(
             f"ffmpeg topilmadi! {FFMPEG_PATH} fayli mavjudligiga ishonch hosil qiling."
         )
-    set_ffmpeg_in_path()  # Whisper uchun ham ffmpeg yo‘lini PATH ga qo‘shamiz
-    # Audio ajratish
+    set_ffmpeg_in_path()
     audio_path = tempfile.mktemp(suffix=".wav")
     if progress_callback:
         progress_callback(5)
@@ -38,24 +37,24 @@ def generate_subtitles(video_path, progress_callback=None):
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     if progress_callback:
         progress_callback(15)
-    # Whisper orqali transkripsiya
     model = whisper.load_model("base")
+    if progress_callback:
+        progress_callback(20)
     result = model.transcribe(audio_path, fp16=False, verbose=False)
     segments = result["segments"]
     srt_path = tempfile.mktemp(suffix=".srt")
     total = len(segments)
-    with open(srt_path, "w", encoding="utf-8") as f:
-        for i, seg in enumerate(segments):
-            start = seg["start"]
-            end = seg["end"]
-            text = seg["text"].strip()
-            f.write(f"{i+1}\n")
-            f.write(f"{format_time(start)} --> {format_time(end)}\n")
-            f.write(f"{text}\n\n")
-            if progress_callback:
-                # Progress: 15% (audio) + 80% (transcribe) proportional
-                p = 15 + int(80 * (i + 1) / total)
-                progress_callback(p)
+    for i, seg in enumerate(segments):
+        start = seg["start"]
+        end = seg["end"]
+        text = seg["text"].strip()
+        f.write(f"{i+1}\n")
+        f.write(f"{format_time(start)} --> {format_time(end)}\n")
+        f.write(f"{text}\n\n")
+        if progress_callback:
+            # Progress: 20% (audio) + 75% (transcribe) proportional
+            p = 20 + int(75 * (i + 1) / total)
+            progress_callback(p)
     os.remove(audio_path)
     if progress_callback:
         progress_callback(100)
@@ -84,15 +83,15 @@ def translate_subtitles(srt_path, dest_lang, progress_callback=None):
     if len(block) == 3:
         blocks.append(block.copy())
     total = len(blocks)
-    with open(out_path, "w", encoding="utf-8") as fout:
-        for i, block in enumerate(blocks):
-            fout.write(block[0])
-            fout.write(block[1])
-            translated = GoogleTranslator(source='auto', target=dest_lang).translate(block[2])
-            fout.write(translated + "\n\n")
-            if progress_callback:
-                p = int(100 * (i + 1) / total)
-                progress_callback(p)
+    for i, block in enumerate(blocks):
+        fout.write(block[0])
+        fout.write(block[1])
+        translated = GoogleTranslator(source='auto', target=dest_lang).translate(block[2])
+        fout.write(translated + "\n\n")
+        if progress_callback:
+            # Progress: 0-100% for translation
+            p = int(100 * (i + 1) / total)
+            progress_callback(p)
     if progress_callback:
         progress_callback(100)
     return out_path
@@ -106,4 +105,5 @@ def burn_subtitles(video_path, srt_path):
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return out_path
     except Exception:
+        return None
         return None
